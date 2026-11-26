@@ -147,6 +147,33 @@ class KosProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> deleteKos({
+    required String kosId,
+    required String ownerId,
+  }) async {
+    if (kosId.trim().isEmpty) return _failSave('Kos tidak ditemukan.');
+    if (ownerId.isEmpty) return _failSave('Login pemilik diperlukan.');
+
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await repository.deleteKos(id: kosId, ownerId: ownerId);
+      await loadKos();
+      return true;
+    } on KosRepositoryException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } catch (error) {
+      _errorMessage = 'Gagal menghapus kos: $error';
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   bool _failSave(String message) {
     _errorMessage = message;
     notifyListeners();

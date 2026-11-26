@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../config/supabase_config.dart';
+import '../models/kos.dart';
 import '../providers/auth_provider.dart';
 import '../providers/kos_provider.dart';
 import 'about_page.dart';
@@ -188,12 +189,27 @@ class _KosListPageState extends State<KosListPage> {
         itemCount: state.visibleItems.length,
         itemBuilder: (context, index) {
           final kos = state.visibleItems[index];
+          final ownerId = context.read<AuthProvider>().session?.userId;
+          final canDelete = ownerId != null && ownerId == kos.ownerId;
           return ListTile(
             title: Text(kos.nama),
             subtitle: Text('${kos.area} - Rp${kos.harga}'),
-            trailing: kos.isPenuh
-                ? const Chip(label: Text('Penuh'))
-                : Text('${kos.jumlahKamar} kamar'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                kos.isPenuh
+                    ? const Chip(label: Text('Penuh'))
+                    : Text('${kos.jumlahKamar} kamar'),
+                if (canDelete)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: 'Hapus kos',
+                    onPressed: state.isSaving
+                        ? null
+                        : () => _confirmDelete(context, state, kos, ownerId),
+                  ),
+              ],
+            ),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -205,5 +221,32 @@ class _KosListPageState extends State<KosListPage> {
         },
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    KosProvider state,
+    Kos kos,
+    String ownerId,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus kos?'),
+        content: Text('Kos "${kos.nama}" akan dihapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await state.deleteKos(kosId: kos.id, ownerId: ownerId);
   }
 }

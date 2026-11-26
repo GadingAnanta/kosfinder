@@ -14,9 +14,17 @@ abstract class KosUpdateDataSource {
   Future<void> updateKos(String id, Map<String, dynamic> row);
 }
 
+abstract class KosDeleteDataSource {
+  Future<void> deleteKos(String id, String ownerId);
+}
+
 /// Implementasi sumber data memakai tabel public.kos di Supabase.
 class SupabaseKosDataSource
-    implements KosDataSource, KosWriteDataSource, KosUpdateDataSource {
+    implements
+        KosDataSource,
+        KosWriteDataSource,
+        KosUpdateDataSource,
+        KosDeleteDataSource {
   SupabaseKosDataSource({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
@@ -43,6 +51,11 @@ class SupabaseKosDataSource
         .update(row)
         .eq('id', id)
         .eq('owner_id', row['owner_id'] as String);
+  }
+
+  @override
+  Future<void> deleteKos(String id, String ownerId) async {
+    await _client.from('kos').delete().eq('id', id).eq('owner_id', ownerId);
   }
 }
 
@@ -126,17 +139,7 @@ class KosRepository {
     }
 
     try {
-      final rows = await _source.fetchRows();
-      final current = rows.cast<Map<String, dynamic>?>().firstWhere(
-        (row) => row?['id'] == id,
-        orElse: () => null,
-      );
-      if (current == null) {
-        throw const KosRepositoryException('Kos tidak ditemukan.');
-      }
-      if (current['owner_id'] != ownerId) {
-        throw const KosRepositoryException('Kos ini bukan milik Anda.');
-      }
+      await _requireOwnedRow(id, ownerId);
 
       await _updater().updateKos(id, {
         'owner_id': ownerId,
@@ -151,6 +154,53 @@ class KosRepository {
     } catch (error) {
       throw KosRepositoryException('Gagal mengubah kos: $error');
     }
+  }
+
+  /// Menghapus kos milik sendiri. RLS Supabase tetap menjadi penegak
+  /// hak akses utama meskipun aplikasi sudah memeriksa owner_id.
+  Future<void> deleteKos({
+    required String id,
+    required String ownerId,
+  }) async {
+    if (id.trim().isEmpty || ownerId.trim().isEmpty) {
+      throw const KosRepositoryException('Login pemilik diperlukan.');
+    }
+
+    try {
+      await _requireOwnedRow(id, ownerId);
+      await _deleter().deleteKos(id, ownerId);
+    } on KosRepositoryException {
+      rethrow;
+    } catch (error) {
+      throw KosRepositoryException('Gagal menghapus kos: $error');
+    }
+  }
+
+  Future<Map<String, dynamic>> _requireOwnedRow(
+    String id,
+    String ownerId,
+  ) async {
+    final rows = await _source.fetchRows();
+    final current = rows.cast<Map<String, dynamic>?>().firstWhere(
+      (row) => row?['id'] == id,
+      orElse: () => null,
+    );
+    if (current == null) {
+      throw const KosRepositoryException('Kos tidak ditemukan.');
+    }
+    if (current['owner_id'] != ownerId) {
+      throw const KosRepositoryException('Kos ini bukan milik Anda.');
+    }
+    return current;
+  }
+
+  KosDeleteDataSource _deleter() {
+    final writer = writeSource;
+    if (writer is KosDeleteDataSource) {
+      return writer as KosDeleteDataSource;
+    }
+    if (_source is KosDeleteDataSource) return _source as KosDeleteDataSource;
+    return SupabaseKosDataSource();
   }
 
   KosUpdateDataSource _updater() {
