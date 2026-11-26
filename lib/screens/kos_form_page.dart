@@ -1,11 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../models/kos.dart';
 import '../providers/auth_provider.dart';
 import '../providers/kos_provider.dart';
 
 class KosFormPage extends StatefulWidget {
-  const KosFormPage({super.key});
+  const KosFormPage({super.key, this.kos});
+
+  /// Kos yang akan diubah. Null berarti mode tambah kos.
+  final Kos? kos;
 
   @override
   State<KosFormPage> createState() => _KosFormPageState();
@@ -18,6 +22,13 @@ class _KosFormPageState extends State<KosFormPage> {
   final TextEditingController _fasilitasController = TextEditingController();
   final TextEditingController _kamarController = TextEditingController();
   String? _validationError;
+  Kos? _selectedKos;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.kos != null) _selectKos(widget.kos);
+  }
 
   @override
   void dispose() {
@@ -32,13 +43,53 @@ class _KosFormPageState extends State<KosFormPage> {
   @override
   Widget build(BuildContext context) {
     final kosState = context.watch<KosProvider>();
+    final auth = context.watch<AuthProvider>();
+    final ownedKos = kosState.items
+        .where((item) => item.ownerId == auth.session?.userId)
+        .toList(growable: false);
+    final isEditing = _selectedKos != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Kos')),
+      appBar: AppBar(title: Text(isEditing ? 'Ubah Kos' : 'Tambah Kos')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            if (widget.kos == null && ownedKos.isNotEmpty) ...[
+              InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Kos saya',
+                  border: OutlineInputBorder(),
+                ),
+                child: DropdownButton<String?>(
+                  value: _selectedKos?.id,
+                  isExpanded: true,
+                  items: [
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Tambah kos baru'),
+                    ),
+                    ...ownedKos.map(
+                      (item) => DropdownMenuItem<String?>(
+                        value: item.id,
+                        child: Text(item.nama),
+                      ),
+                    ),
+                  ],
+                  onChanged: (id) {
+                    final selected = id == null
+                        ? null
+                        : ownedKos.firstWhere(
+                            (item) => item.id == id,
+                            orElse: () => _selectedKos ?? ownedKos.first,
+                          );
+                    setState(() => _selectKos(selected));
+                    kosState.clearError();
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _namaController,
               decoration: const InputDecoration(
@@ -133,16 +184,41 @@ class _KosFormPageState extends State<KosFormPage> {
       return;
     }
 
-    final saved = await context.read<KosProvider>().createKos(
-      ownerId: ownerId,
-      nama: nama,
-      area: area,
-      harga: harga,
-      fasilitas: fasilitas,
-      jumlahKamar: jumlahKamar,
-    );
+    final kosState = context.read<KosProvider>();
+    final editing = _selectedKos;
+    final bool saved;
+    if (editing == null) {
+      saved = await kosState.createKos(
+        ownerId: ownerId,
+        nama: nama,
+        area: area,
+        harga: harga,
+        fasilitas: fasilitas,
+        jumlahKamar: jumlahKamar,
+      );
+    } else {
+      saved = await kosState.updateKos(
+        kosId: editing.id,
+        ownerId: ownerId,
+        nama: nama,
+        area: area,
+        harga: harga,
+        fasilitas: fasilitas,
+        jumlahKamar: jumlahKamar,
+      );
+    }
 
     if (saved && mounted) Navigator.of(context).maybePop();
+  }
+
+  void _selectKos(Kos? kos) {
+    _selectedKos = kos;
+    _namaController.text = kos?.nama ?? '';
+    _areaController.text = kos?.area ?? '';
+    _hargaController.text = kos == null ? '' : '${kos.harga}';
+    _fasilitasController.text = kos?.fasilitas ?? '';
+    _kamarController.text = kos == null ? '' : '${kos.jumlahKamar}';
+    _validationError = null;
   }
 
   void _showValidation(String message) {

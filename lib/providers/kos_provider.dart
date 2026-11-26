@@ -68,12 +68,12 @@ class KosProvider extends ChangeNotifier {
     required String fasilitas,
     required int jumlahKamar,
   }) async {
-    if (ownerId.isEmpty) return _failCreate('Login pemilik diperlukan.');
+    if (ownerId.isEmpty) return _failSave('Login pemilik diperlukan.');
     if (nama.trim().isEmpty || area.trim().isEmpty) {
-      return _failCreate('Nama dan area wajib diisi.');
+      return _failSave('Nama dan area wajib diisi.');
     }
-    if (harga < 0) return _failCreate('Harga tidak boleh negatif.');
-    if (jumlahKamar < 0) return _failCreate('Jumlah kamar tidak boleh negatif.');
+    if (harga < 0) return _failSave('Harga tidak boleh negatif.');
+    if (jumlahKamar < 0) return _failSave('Jumlah kamar tidak boleh negatif.');
 
     _isSaving = true;
     _errorMessage = null;
@@ -102,7 +102,52 @@ class KosProvider extends ChangeNotifier {
     }
   }
 
-  bool _failCreate(String message) {
+  Future<bool> updateKos({
+    required String kosId,
+    required String ownerId,
+    required String nama,
+    required String area,
+    required int harga,
+    required String fasilitas,
+    required int jumlahKamar,
+  }) async {
+    if (kosId.trim().isEmpty) return _failSave('Kos tidak ditemukan.');
+    if (ownerId.isEmpty) return _failSave('Login pemilik diperlukan.');
+    if (nama.trim().isEmpty || area.trim().isEmpty) {
+      return _failSave('Nama dan area wajib diisi.');
+    }
+    if (harga < 0) return _failSave('Harga tidak boleh negatif.');
+    if (jumlahKamar < 0) return _failSave('Jumlah kamar tidak boleh negatif.');
+
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await repository.updateKos(
+        id: kosId,
+        ownerId: ownerId,
+        nama: nama,
+        area: area,
+        harga: harga,
+        fasilitas: fasilitas,
+        jumlahKamar: jumlahKamar,
+      );
+      await loadKos();
+      return true;
+    } on KosRepositoryException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } catch (error) {
+      _errorMessage = 'Gagal mengubah kos: $error';
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  bool _failSave(String message) {
     _errorMessage = message;
     notifyListeners();
     return false;

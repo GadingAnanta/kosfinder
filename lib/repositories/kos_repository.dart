@@ -10,8 +10,13 @@ abstract class KosWriteDataSource {
   Future<void> insertKos(Map<String, dynamic> row);
 }
 
+abstract class KosUpdateDataSource {
+  Future<void> updateKos(String id, Map<String, dynamic> row);
+}
+
 /// Implementasi sumber data memakai tabel public.kos di Supabase.
-class SupabaseKosDataSource implements KosDataSource, KosWriteDataSource {
+class SupabaseKosDataSource
+    implements KosDataSource, KosWriteDataSource, KosUpdateDataSource {
   SupabaseKosDataSource({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
@@ -29,6 +34,15 @@ class SupabaseKosDataSource implements KosDataSource, KosWriteDataSource {
   @override
   Future<void> insertKos(Map<String, dynamic> row) async {
     await _client.from('kos').insert(row);
+  }
+
+  @override
+  Future<void> updateKos(String id, Map<String, dynamic> row) async {
+    await _client
+        .from('kos')
+        .update(row)
+        .eq('id', id)
+        .eq('owner_id', row['owner_id'] as String);
   }
 }
 
@@ -94,6 +108,58 @@ class KosRepository {
     } catch (error) {
       throw KosRepositoryException('Gagal menyimpan kos: $error');
     }
+  }
+
+  /// Mengubah kos milik sendiri. Pemeriksaan owner_id dilakukan di aplikasi
+  /// dan RLS Supabase tetap menjadi penegak hak akses utama.
+  Future<void> updateKos({
+    required String id,
+    required String ownerId,
+    required String nama,
+    required String area,
+    required int harga,
+    required String fasilitas,
+    required int jumlahKamar,
+  }) async {
+    if (id.trim().isEmpty || ownerId.trim().isEmpty) {
+      throw const KosRepositoryException('Login pemilik diperlukan.');
+    }
+
+    try {
+      final rows = await _source.fetchRows();
+      final current = rows.cast<Map<String, dynamic>?>().firstWhere(
+        (row) => row?['id'] == id,
+        orElse: () => null,
+      );
+      if (current == null) {
+        throw const KosRepositoryException('Kos tidak ditemukan.');
+      }
+      if (current['owner_id'] != ownerId) {
+        throw const KosRepositoryException('Kos ini bukan milik Anda.');
+      }
+
+      await _updater().updateKos(id, {
+        'owner_id': ownerId,
+        'nama': nama.trim(),
+        'area': area.trim(),
+        'harga': harga,
+        'fasilitas': fasilitas.trim(),
+        'jumlah_kamar': jumlahKamar,
+      });
+    } on KosRepositoryException {
+      rethrow;
+    } catch (error) {
+      throw KosRepositoryException('Gagal mengubah kos: $error');
+    }
+  }
+
+  KosUpdateDataSource _updater() {
+    final writer = writeSource;
+    if (writer is KosUpdateDataSource) {
+      return writer as KosUpdateDataSource;
+    }
+    if (_source is KosUpdateDataSource) return _source as KosUpdateDataSource;
+    return SupabaseKosDataSource();
   }
 }
 
