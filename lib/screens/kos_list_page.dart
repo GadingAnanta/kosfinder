@@ -14,12 +14,20 @@ class KosListPage extends StatefulWidget {
 }
 
 class _KosListPageState extends State<KosListPage> {
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<KosProvider>().loadKos();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,6 +58,27 @@ class _KosListPageState extends State<KosListPage> {
               padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Text('Mode: Supabase belum dikonfigurasi'),
             ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: state.setSearchQuery,
+              decoration: InputDecoration(
+                labelText: 'Cari area',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: state.searchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          state.clearSearch();
+                        },
+                      ),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
           Expanded(child: _buildBody(context, state)),
         ],
       ),
@@ -83,17 +112,23 @@ class _KosListPageState extends State<KosListPage> {
       );
     }
 
-    if (state.items.isEmpty) {
-      return const Center(child: Text('Belum ada kos yang tersedia'));
+    if (state.visibleItems.isEmpty) {
+      return Center(
+        child: Text(
+          state.searchQuery.trim().isEmpty
+              ? 'Belum ada kos yang tersedia'
+              : 'Tidak ada kos di area tersebut',
+        ),
+      );
     }
 
     return RefreshIndicator(
       onRefresh: state.loadKos,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: state.items.length,
+        itemCount: state.visibleItems.length,
         itemBuilder: (context, index) {
-          final kos = state.items[index];
+          final kos = state.visibleItems[index];
           return ListTile(
             title: Text(kos.nama),
             subtitle: Text('${kos.area} - Rp${kos.harga}'),

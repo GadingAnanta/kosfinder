@@ -14,11 +14,14 @@ class KosProvider extends ChangeNotifier {
   List<Kos> _items = <Kos>[];
   bool _isLoading = false;
   String? _errorMessage;
+  String _searchQuery = '';
 
   List<Kos> get items => List<Kos>.unmodifiable(_items);
+  List<Kos> get visibleItems => repository.filterByArea(_items, _searchQuery);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
+  String get searchQuery => _searchQuery;
 
   Future<void> loadKos() async {
     _isLoading = true;
@@ -38,6 +41,14 @@ class KosProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void setSearchQuery(String value) {
+    if (_searchQuery == value) return;
+    _searchQuery = value;
+    notifyListeners();
+  }
+
+  void clearSearch() => setSearchQuery('');
 
   void clearError() {
     if (_errorMessage == null) return;

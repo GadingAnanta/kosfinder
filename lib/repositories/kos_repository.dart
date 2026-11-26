@@ -40,6 +40,15 @@ class KosRepository {
       throw KosRepositoryException('Gagal memuat daftar kos: $error');
     }
   }
+
+  /// Filter area case-insensitive. Query kosong mengembalikan semua kos.
+  List<Kos> filterByArea(List<Kos> items, String query) {
+    final keyword = query.trim().toLowerCase();
+    if (keyword.isEmpty) return items;
+    return items
+        .where((kos) => kos.area.toLowerCase().contains(keyword))
+        .toList(growable: false);
+  }
 }
 
 class KosRepositoryException implements Exception {
