@@ -63,6 +63,13 @@ List<Kos> _items() {
   ];
 }
 
+Finder _searchField() {
+  return find.byWidgetPredicate(
+    (widget) =>
+        widget is TextField && widget.decoration?.labelText == 'Cari area',
+  );
+}
+
 void main() {
   test('filterByArea case-insensitive', () {
     final repository = KosRepository(source: const FakeKosDataSource([]));
@@ -105,13 +112,13 @@ void main() {
     expect(find.text('Kos Melati'), findsOneWidget);
     expect(find.text('Kos Mawar'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'singaraja');
+    await tester.enterText(_searchField(), 'singaraja');
     await tester.pumpAndSettle();
 
     expect(find.text('Kos Melati'), findsOneWidget);
     expect(find.text('Kos Mawar'), findsNothing);
 
-    await tester.enterText(find.byType(TextField), 'Singaraja');
+    await tester.enterText(_searchField(), 'Singaraja');
     await tester.pumpAndSettle();
 
     expect(find.text('Kos Melati'), findsOneWidget);

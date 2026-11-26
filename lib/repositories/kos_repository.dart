@@ -49,6 +49,14 @@ class KosRepository {
         .where((kos) => kos.area.toLowerCase().contains(keyword))
         .toList(growable: false);
   }
+
+  /// Filter harga maksimum. Null berarti tidak ada batas harga.
+  List<Kos> filterByMaxHarga(List<Kos> items, int? maxHarga) {
+    if (maxHarga == null) return items;
+    return items
+        .where((kos) => kos.harga <= maxHarga)
+        .toList(growable: false);
+  }
 }
 
 class KosRepositoryException implements Exception {

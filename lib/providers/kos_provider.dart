@@ -15,13 +15,29 @@ class KosProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   String _searchQuery = '';
+  String _maxPriceInput = '';
 
   List<Kos> get items => List<Kos>.unmodifiable(_items);
-  List<Kos> get visibleItems => repository.filterByArea(_items, _searchQuery);
+  List<Kos> get visibleItems {
+    final byArea = repository.filterByArea(_items, _searchQuery);
+    return repository.filterByMaxHarga(byArea, maxHarga);
+  }
+
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
   String get searchQuery => _searchQuery;
+  String get maxPriceInput => _maxPriceInput;
+
+  /// Menerima "2000000" maupun "2.000.000".
+  int? get maxHarga {
+    final cleaned = _maxPriceInput.replaceAll(RegExp(r'\D'), '');
+    if (cleaned.isEmpty) return null;
+    return int.tryParse(cleaned);
+  }
+
+  bool get hasInvalidMaxPrice =>
+      _maxPriceInput.trim().isNotEmpty && maxHarga == null;
 
   Future<void> loadKos() async {
     _isLoading = true;
@@ -49,6 +65,14 @@ class KosProvider extends ChangeNotifier {
   }
 
   void clearSearch() => setSearchQuery('');
+
+  void setMaxPrice(String value) {
+    if (_maxPriceInput == value) return;
+    _maxPriceInput = value;
+    notifyListeners();
+  }
+
+  void clearMaxPrice() => setMaxPrice('');
 
   void clearError() {
     if (_errorMessage == null) return;

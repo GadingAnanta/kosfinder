@@ -15,6 +15,7 @@ class KosListPage extends StatefulWidget {
 
 class _KosListPageState extends State<KosListPage> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _KosListPageState extends State<KosListPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 
@@ -79,6 +81,31 @@ class _KosListPageState extends State<KosListPage> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              controller: _priceController,
+              keyboardType: TextInputType.number,
+              onChanged: state.setMaxPrice,
+              decoration: InputDecoration(
+                labelText: 'Harga maksimum',
+                prefixIcon: const Icon(Icons.attach_money),
+                helperText: state.hasInvalidMaxPrice
+                    ? 'Harga maksimum harus angka'
+                    : null,
+                suffixIcon: state.maxPriceInput.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _priceController.clear();
+                          state.clearMaxPrice();
+                        },
+                      ),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
           Expanded(child: _buildBody(context, state)),
         ],
       ),
@@ -113,13 +140,18 @@ class _KosListPageState extends State<KosListPage> {
     }
 
     if (state.visibleItems.isEmpty) {
-      return Center(
-        child: Text(
-          state.searchQuery.trim().isEmpty
-              ? 'Belum ada kos yang tersedia'
-              : 'Tidak ada kos di area tersebut',
-        ),
-      );
+      final hasSearch = state.searchQuery.trim().isNotEmpty;
+      final hasPrice = state.maxHarga != null;
+
+      final message = !hasSearch && !hasPrice
+          ? 'Belum ada kos yang tersedia'
+          : hasSearch && !hasPrice
+          ? 'Tidak ada kos di area tersebut'
+          : !hasSearch && hasPrice
+          ? 'Tidak ada kos dengan harga tersebut'
+          : 'Tidak ada kos yang cocok dengan filter';
+
+      return Center(child: Text(message));
     }
 
     return RefreshIndicator(
