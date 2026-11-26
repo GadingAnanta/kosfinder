@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../config/supabase_config.dart';
 import '../providers/kos_provider.dart';
 import 'about_page.dart';
+import 'auth_page.dart';
 import 'kos_detail_page.dart';
 
 class KosListPage extends StatefulWidget {
@@ -40,6 +41,17 @@ class _KosListPageState extends State<KosListPage> {
       appBar: AppBar(
         title: const Text('Daftar Kos'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Masuk pemilik',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AuthPage(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'Tentang aplikasi',
