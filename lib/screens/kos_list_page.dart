@@ -2,10 +2,12 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../config/supabase_config.dart';
+import '../providers/auth_provider.dart';
 import '../providers/kos_provider.dart';
 import 'about_page.dart';
 import 'auth_page.dart';
 import 'kos_detail_page.dart';
+import 'kos_form_page.dart';
 
 class KosListPage extends StatefulWidget {
   const KosListPage({super.key});
@@ -36,11 +38,24 @@ class _KosListPageState extends State<KosListPage> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<KosProvider>();
+    final auth = context.watch<AuthProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Kos'),
         actions: [
+          if (auth.isSignedIn)
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Tambah kos',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const KosFormPage(),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Masuk pemilik',

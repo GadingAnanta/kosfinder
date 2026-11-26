@@ -6,8 +6,12 @@ abstract class KosDataSource {
   Future<List<Map<String, dynamic>>> fetchRows();
 }
 
+abstract class KosWriteDataSource {
+  Future<void> insertKos(Map<String, dynamic> row);
+}
+
 /// Implementasi sumber data memakai tabel public.kos di Supabase.
-class SupabaseKosDataSource implements KosDataSource {
+class SupabaseKosDataSource implements KosDataSource, KosWriteDataSource {
   SupabaseKosDataSource({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
@@ -21,13 +25,19 @@ class SupabaseKosDataSource implements KosDataSource {
         .order('created_at');
     return List<Map<String, dynamic>>.from(rows);
   }
+
+  @override
+  Future<void> insertKos(Map<String, dynamic> row) async {
+    await _client.from('kos').insert(row);
+  }
 }
 
 class KosRepository {
-  KosRepository({KosDataSource? source})
+  KosRepository({KosDataSource? source, this.writeSource})
     : _source = source ?? SupabaseKosDataSource();
 
   final KosDataSource _source;
+  final KosWriteDataSource? writeSource;
 
   /// Mengambil seluruh kos. Tabel kosong mengembalikan list kosong.
   /// Kegagalan jaringan diterjemahkan menjadi [KosRepositoryException]
@@ -56,6 +66,34 @@ class KosRepository {
     return items
         .where((kos) => kos.harga <= maxHarga)
         .toList(growable: false);
+  }
+
+  /// Menyimpan kos baru. owner_id diambil dari sesi pemilik yang login.
+  Future<void> createKos({
+    required String ownerId,
+    required String nama,
+    required String area,
+    required int harga,
+    required String fasilitas,
+    required int jumlahKamar,
+  }) async {
+    try {
+      final writer =
+          writeSource ??
+          (_source is KosWriteDataSource
+              ? _source as KosWriteDataSource
+              : SupabaseKosDataSource());
+      await writer.insertKos({
+        'owner_id': ownerId,
+        'nama': nama,
+        'area': area,
+        'harga': harga,
+        'fasilitas': fasilitas,
+        'jumlah_kamar': jumlahKamar,
+      });
+    } catch (error) {
+      throw KosRepositoryException('Gagal menyimpan kos: $error');
+    }
   }
 }
 

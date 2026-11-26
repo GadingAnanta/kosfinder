@@ -36,7 +36,7 @@ class KosFinderApp extends StatelessWidget {
     final source = SupabaseConfig.isConfigured
         ? null
         : const _EmptyKosDataSource();
-    return KosRepository(source: source);
+    return KosRepository(source: source, writeSource: source);
   }
 
   static AuthRepository _createAuthRepository() {
@@ -47,12 +47,17 @@ class KosFinderApp extends StatelessWidget {
   }
 }
 
-class _EmptyKosDataSource implements KosDataSource {
+class _EmptyKosDataSource implements KosDataSource, KosWriteDataSource {
   const _EmptyKosDataSource();
 
   @override
   Future<List<Map<String, dynamic>>> fetchRows() async {
     return const <Map<String, dynamic>>[];
+  }
+
+  @override
+  Future<void> insertKos(Map<String, dynamic> row) async {
+    throw Exception('Supabase belum dikonfigurasi');
   }
 }
 

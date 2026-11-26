@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosfinder/models/kos.dart';
+import 'package:kosfinder/providers/auth_provider.dart';
 import 'package:kosfinder/providers/kos_provider.dart';
+import 'package:kosfinder/repositories/auth_repository.dart';
 import 'package:kosfinder/repositories/kos_repository.dart';
 import 'package:kosfinder/screens/kos_list_page.dart';
 import 'package:material_ui/material_ui.dart';
@@ -13,6 +15,32 @@ class FakeKosDataSource implements KosDataSource {
 
   @override
   Future<List<Map<String, dynamic>>> fetchRows() async => rows;
+}
+
+class _NoAuthDataSource implements AuthDataSource {
+  const _NoAuthDataSource();
+
+  @override
+  AuthSession? get currentSession => null;
+
+  @override
+  Future<AuthSession?> signUp({
+    required String email,
+    required String password,
+  }) async {
+    return null;
+  }
+
+  @override
+  Future<AuthSession?> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    return null;
+  }
+
+  @override
+  Future<void> signOut() async {}
 }
 
 List<Map<String, dynamic>> _rows() {
@@ -100,10 +128,19 @@ void main() {
 
   testWidgets('carian area di UI memfilter daftar', (WidgetTester tester) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider<KosProvider>(
-        create: (_) => KosProvider(
-          repository: KosRepository(source: FakeKosDataSource(_rows())),
-        ),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<KosProvider>(
+            create: (_) => KosProvider(
+              repository: KosRepository(source: FakeKosDataSource(_rows())),
+            ),
+          ),
+          ChangeNotifierProvider<AuthProvider>(
+            create: (_) => AuthProvider(
+              repository: AuthRepository(source: const _NoAuthDataSource()),
+            ),
+          ),
+        ],
         child: const MaterialApp(home: KosListPage()),
       ),
     );

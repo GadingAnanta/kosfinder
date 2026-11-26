@@ -13,6 +13,7 @@ class KosProvider extends ChangeNotifier {
 
   List<Kos> _items = <Kos>[];
   bool _isLoading = false;
+  bool _isSaving = false;
   String? _errorMessage;
   String _searchQuery = '';
   String _maxPriceInput = '';
@@ -24,6 +25,7 @@ class KosProvider extends ChangeNotifier {
   }
 
   bool get isLoading => _isLoading;
+  bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
   String get searchQuery => _searchQuery;
@@ -56,6 +58,54 @@ class KosProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<bool> createKos({
+    required String ownerId,
+    required String nama,
+    required String area,
+    required int harga,
+    required String fasilitas,
+    required int jumlahKamar,
+  }) async {
+    if (ownerId.isEmpty) return _failCreate('Login pemilik diperlukan.');
+    if (nama.trim().isEmpty || area.trim().isEmpty) {
+      return _failCreate('Nama dan area wajib diisi.');
+    }
+    if (harga < 0) return _failCreate('Harga tidak boleh negatif.');
+    if (jumlahKamar < 0) return _failCreate('Jumlah kamar tidak boleh negatif.');
+
+    _isSaving = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await repository.createKos(
+        ownerId: ownerId,
+        nama: nama.trim(),
+        area: area.trim(),
+        harga: harga,
+        fasilitas: fasilitas.trim(),
+        jumlahKamar: jumlahKamar,
+      );
+      await loadKos();
+      return true;
+    } on KosRepositoryException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } catch (error) {
+      _errorMessage = 'Gagal menyimpan kos: $error';
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  bool _failCreate(String message) {
+    _errorMessage = message;
+    notifyListeners();
+    return false;
   }
 
   void setSearchQuery(String value) {
