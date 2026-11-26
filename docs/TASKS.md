@@ -6,7 +6,7 @@ Aturan: satu task per permintaan, satu commit per task, pesan commit menyebut ID
 
 | ID | Slice | Tujuan | Story / AC | File yang boleh diubah | Cara uji | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| T01 | 1 | Siapkan konfigurasi Supabase dari `--dart-define` dan model `Kos` | US01-AC1 | `lib/main.dart`, `lib/app.dart`, `lib/config/supabase_config.dart`, `lib/models/kos.dart`, `test/kos_model_test.dart` | `flutter analyze`, `flutter test`, aplikasi terbuka tanpa key di kode | todo |
+| T01 | 1 | Siapkan konfigurasi Supabase dari `--dart-define` dan model `Kos` | US01-AC1 | `pubspec.yaml`, `pubspec.lock`, `lib/main.dart`, `lib/app.dart`, `lib/config/supabase_config.dart`, `lib/models/kos.dart`, `test/kos_model_test.dart`, `test/widget_test.dart` | `flutter analyze`, `flutter test`, aplikasi terbuka tanpa key di kode | todo |
 | T02 | 1 | Repository mengambil daftar kos dari `public.kos` | US01-AC1, US01-AC2 | `lib/repositories/kos_repository.dart`, `test/kos_repository_test.dart` | Daftar kos tampil; tabel kosong memunculkan pesan | todo |
 | T03 | 1 | Provider menyimpan state daftar, loading, dan error koneksi | US01-AC2, US05-AC1, US05-AC2 | `lib/providers/kos_provider.dart`, `test/kos_provider_test.dart` | Matikan internet: pesan muncul, tidak crash; nyala lagi: daftar kembali | todo |
 | T04 | 1 | Tampilkan daftar, detail kos, status Penuh, dan About | US01-AC1, US02-AC1, US02-AC2 | `lib/screens/kos_list_page.dart`, `lib/screens/kos_detail_page.dart`, `lib/screens/about_page.dart`, `lib/app.dart` | Buka daftar, pilih detail, cek kos `jumlah_kamar = 0` tampil Penuh, cek NIM-Nama di About | todo |
