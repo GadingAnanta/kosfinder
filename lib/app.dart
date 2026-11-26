@@ -1,6 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 
 import 'config/supabase_config.dart';
+import 'providers/kos_provider.dart';
+import 'repositories/kos_repository.dart';
+import 'screens/kos_list_page.dart';
 
 class KosFinderApp extends StatelessWidget {
   const KosFinderApp({super.key});
@@ -11,46 +15,28 @@ class KosFinderApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'KosFinder',
       theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
-      home: const BootstrapPage(),
+      home: ChangeNotifierProvider<KosProvider>(
+        create: (_) => KosProvider(repository: _createRepository()),
+        child: const KosListPage(),
+      ),
     );
+  }
+
+  /// Tanpa --dart-define, pakai sumber kosong agar aplikasi tetap terbuka.
+  /// Saat Supabase aktif, repository memakai client Supabase bawaan.
+  static KosRepository _createRepository() {
+    final source = SupabaseConfig.isConfigured
+        ? null
+        : const _EmptyKosDataSource();
+    return KosRepository(source: source);
   }
 }
 
-/// Halaman sementara untuk T01.
-/// T04 akan menggantinya dengan daftar kos.
-class BootstrapPage extends StatelessWidget {
-  const BootstrapPage({super.key});
+class _EmptyKosDataSource implements KosDataSource {
+  const _EmptyKosDataSource();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('KosFinder')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Fondasi Supabase dan model Kos sudah siap.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                SupabaseConfig.isConfigured
-                    ? 'Mode: Supabase aktif'
-                    : 'Mode: Supabase belum dikonfigurasi',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Berikutnya: daftar dan detail kos (Slice 1).',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  Future<List<Map<String, dynamic>>> fetchRows() async {
+    return const <Map<String, dynamic>>[];
   }
 }
