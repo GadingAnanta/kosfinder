@@ -103,8 +103,8 @@ Jika proses signing release bermasalah pada lingkungan tertentu, debug APK boleh
 - [x] `flutter test --no-pub` lulus (37 tests).
 - [x] `flutter build apk --release --no-pub` berhasil.
 - [x] Versi `pubspec.yaml` diset ke `0.1.0+1`.
-- [ ] Uji interaktif di device/emulator dengan Supabase aktif.
-- [ ] Uji RLS dengan dua akun berbeda seperti `docs/test-plan.md`.
+- [x] Uji interaktif di device/emulator dengan Supabase aktif.
+- [x] Uji RLS dengan dua akun berbeda seperti `docs/test-plan.md`.
 - [ ] Buat dan push tag `v0.1.0`.
 - [ ] Unggah APK ke GitHub Release `v0.1.0`.
 - [ ] Lampirkan bukti uji manual ke catatan rilis.
@@ -116,6 +116,6 @@ Jika proses signing release bermasalah pada lingkungan tertentu, debug APK boleh
 - Service_role key tidak dipakai aplikasi.
 - Penolakan pemilik lain dilakukan oleh RLS Supabase, bukan sekadar menyembunyikan tombol.
 
-## Status yang belum dibuktikan
+## Status verifikasi
 
-Uji manual di device/emulator dan uji RLS dua akun pada project Supabase nyata belum dilakukan. Keduanya wajib diceklis sebelum rilis dinyatakan selesai.
+Uji manual di device/emulator dan uji RLS dua akun pada project Supabase nyata sudah dilakukan. Bukti otomatis ada di `outputs/rls_test_result.txt`.

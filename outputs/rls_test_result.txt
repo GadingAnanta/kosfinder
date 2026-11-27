@@ -1,0 +1,14 @@
+﻿ KosFinder - Uji RLS otomatis
+ Waktu     : 2026-11-27 19.58.22
+ Project   : nzlkfdmpjhmedasljmbq.supabase.co
+ Akun A    : rls_a_20261127195822@example.com
+ Akun B    : rls_b_20261127195822@example.com
+
+ Signup A/B : OK
+ Login A/B  : OK
+ Insert A   : OK (id=ebdfa220-b022-4f70-b925-c31e9f47170d)
+ US08-AC2   : PASS - PATCH B status=204, jumlah_kamar setelahnya=1 (harus 1)
+ US09-AC2   : PASS - DELETE B status=204, kos masih ada=True
+ Cleanup    : kos uji dihapus status=204
+ Catatan    : akun uji A/B tetap ada di Authentication; hapus manual di Dashboard bila perlu.
+
