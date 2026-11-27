@@ -85,6 +85,13 @@ class AuthRepository {
   }) async {
     try {
       return await _source.signUp(email: email, password: password);
+    } on AuthApiException catch (error) {
+      if (error.code == 'user_already_exists') {
+        throw const AuthRepositoryException(
+          'Email ini sudah terdaftar. Silakan masuk atau gunakan email lain.',
+        );
+      }
+      throw AuthRepositoryException('Gagal mendaftar: ${error.message}');
     } catch (error) {
       throw AuthRepositoryException('Gagal mendaftar: $error');
     }
@@ -99,6 +106,18 @@ class AuthRepository {
         email: email,
         password: password,
       );
+    } on AuthApiException catch (error) {
+      if (error.code == 'invalid_credentials') {
+        throw const AuthRepositoryException(
+          'Email atau password salah. Pastikan email sudah diverifikasi.',
+        );
+      }
+      if (error.code == 'email_not_confirmed') {
+        throw const AuthRepositoryException(
+          'Email belum diverifikasi. Cek inbox/spam atau konfirmasi di Supabase Dashboard.',
+        );
+      }
+      throw AuthRepositoryException('Gagal masuk: ${error.message}');
     } catch (error) {
       throw AuthRepositoryException('Gagal masuk: $error');
     }

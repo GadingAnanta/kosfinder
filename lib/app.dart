@@ -13,20 +13,20 @@ class KosFinderApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'KosFinder',
-      theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider<KosProvider>(
-            create: (_) => KosProvider(repository: _createRepository()),
-          ),
-          ChangeNotifierProvider<AuthProvider>(
-            create: (_) => AuthProvider(repository: _createAuthRepository()),
-          ),
-        ],
-        child: const KosListPage(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<KosProvider>(
+          create: (_) => KosProvider(repository: _createRepository()),
+        ),
+        ChangeNotifierProvider<AuthProvider>(
+          create: (_) => AuthProvider(repository: _createAuthRepository()),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'KosFinder',
+        theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
+        home: const KosListPage(),
       ),
     );
   }
