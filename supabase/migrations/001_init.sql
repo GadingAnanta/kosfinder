@@ -18,6 +18,10 @@ create index if not exists kos_harga_idx on public.kos (harga);
 
 alter table public.kos enable row level security;
 
+-- Role PostgREST juga butuh privilege tabel, bukan hanya policy RLS.
+grant select on public.kos to anon, authenticated;
+grant insert, update, delete on public.kos to authenticated;
+
 -- Semua orang, termasuk pencari tanpa login, boleh melihat kos.
 drop policy if exists "kos_public_read" on public.kos;
 create policy "kos_public_read"
