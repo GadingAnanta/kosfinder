@@ -105,9 +105,9 @@ Jika proses signing release bermasalah pada lingkungan tertentu, debug APK boleh
 - [x] Versi `pubspec.yaml` diset ke `0.1.0+1`.
 - [x] Uji interaktif di device/emulator dengan Supabase aktif.
 - [x] Uji RLS dengan dua akun berbeda seperti `docs/test-plan.md`.
-- [ ] Buat dan push tag `v0.1.0`.
-- [ ] Unggah APK ke GitHub Release `v0.1.0`.
-- [ ] Lampirkan bukti uji manual ke catatan rilis.
+- [x] Buat dan push tag `v0.1.0`.
+- [x] Unggah APK ke GitHub Release `v0.1.0`.
+- [x] Lampirkan bukti uji manual ke catatan rilis.
 
 ## Catatan keamanan
 
